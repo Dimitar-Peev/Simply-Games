@@ -45,7 +45,6 @@ public class WhacAMole {
         // boardPanel.setBackground(Color.black);
         frame.add(boardPanel);
 
-        // plantIcon = new ImageIcon(getClass().getResource("./piranha.png"));
         Image plantImg = new ImageIcon(getClass().getResource("./piranha.png")).getImage();
         plantIcon = new ImageIcon(plantImg.getScaledInstance(150, 150, java.awt.Image.SCALE_SMOOTH));
 
@@ -125,11 +124,3 @@ public class WhacAMole {
         frame.setVisible(true);
     }
 }
-
-
-/*
- * Homework
- * - Add Multiple Piranha plants and store them in an Array
- * - Add Button on the bottom to restart game
- * - Keep track of high score and display it
- */
