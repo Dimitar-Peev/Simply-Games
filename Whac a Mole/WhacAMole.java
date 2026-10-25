@@ -13,16 +13,19 @@ public class WhacAMole {
     JPanel boardPanel = new JPanel();
 
     JButton[] board = new JButton[9];
+    JButton resetButton = new JButton("Reset");
     ImageIcon moleIcon;
     ImageIcon plantIcon;
 
     JButton currMoleTile;
-    JButton currPlantTile;
+    JButton[] currPlantTiles = new JButton[2];
 
     Random random = new Random();
     Timer setMoleTimer;
     Timer setPlantTimer;
     int score = 0;
+    int highScore = 0;
+    boolean gameOver = false;
 
     WhacAMole() {
         // frame.setVisible(true);
@@ -32,13 +35,19 @@ public class WhacAMole {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
-        textLabel.setFont(new Font("Arial", Font.PLAIN, 50));
+        textLabel.setFont(new Font("Arial", Font.PLAIN, 30));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
-        textLabel.setText("Score: " + Integer.toString(score));
+        updateScoreLabel();
         textLabel.setOpaque(true);
 
         textPanel.setLayout(new BorderLayout());
         textPanel.add(textLabel);
+        resetButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetGame();
+            }
+        });
+        textPanel.add(resetButton, BorderLayout.EAST);
         frame.add(textPanel, BorderLayout.NORTH);
 
         boardPanel.setLayout(new GridLayout(3, 3));
@@ -63,13 +72,19 @@ public class WhacAMole {
                     JButton tile = (JButton) e.getSource();
                     if (tile == currMoleTile) {
                         score += 10;
-                        textLabel.setText("Score: " + Integer.toString(score));
+                        if (score > highScore) {
+                            highScore = score;
+                        }
+                        currMoleTile.setIcon(null);
+                        currMoleTile = null;
+                        updateScoreLabel();
                     }
-                    else if (tile == currPlantTile) {
-                        textLabel.setText("Game Over: " + Integer.toString(score));
+                    else if (isPlantTile(tile)) {
+                        gameOver = true;
+                        updateScoreLabel();
                         setMoleTimer.stop();
                         setPlantTimer.stop();
-                        for (int i = 0; i < 9; i++) {
+                        for (int i = 0; i < board.length; i++) {
                             board[i].setEnabled(false);
                         }
                     }
@@ -85,14 +100,7 @@ public class WhacAMole {
                     currMoleTile = null;
                 }
 
-                //randomly select another tile
-                int num = random.nextInt(9); //0-8
-                JButton tile = board[num];
-
-                //if tile is occupied by plant, skip tile for this turn
-                if (currPlantTile == tile) return;
-
-                //set tile to mole
+                JButton tile = getAvailableTile();
                 currMoleTile = tile;
                 currMoleTile.setIcon(moleIcon);
             }
@@ -100,27 +108,64 @@ public class WhacAMole {
 
         setPlantTimer = new Timer(1500, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                //remove icon from current tile
-                if (currPlantTile != null) {
-                    currPlantTile.setIcon(null);
-                    currPlantTile = null;
+                for (int i = 0; i < currPlantTiles.length; i++) {
+                    if (currPlantTiles[i] != null) {
+                        currPlantTiles[i].setIcon(null);
+                        currPlantTiles[i] = null;
+                    }
                 }
 
-                //randomly select another tile
-                int num = random.nextInt(9); //0-8
-                JButton tile = board[num];
-
-                //if tile is occupied by mole, skip tile for this turn
-                if (currMoleTile == tile) return;
-
-                //set tile to mole
-                currPlantTile = tile;
-                currPlantTile.setIcon(plantIcon);
+                for (int i = 0; i < currPlantTiles.length; i++) {
+                    JButton tile = getAvailableTile();
+                    currPlantTiles[i] = tile;
+                    tile.setIcon(plantIcon);
+                }
             }
         });
 
         setMoleTimer.start();
         setPlantTimer.start();
         frame.setVisible(true);
+    }
+
+    private JButton getAvailableTile() {
+        while (true) {
+            JButton tile = board[random.nextInt(board.length)];
+            if (tile != currMoleTile && !isPlantTile(tile)) {
+                return tile;
+            }
+        }
+    }
+
+    private boolean isPlantTile(JButton tile) {
+        for (JButton plantTile : currPlantTiles) {
+            if (plantTile == tile) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateScoreLabel() {
+        String status = gameOver ? "Game Over! " : "";
+        textLabel.setText(status + "Score: " + score + "  Best: " + highScore);
+    }
+
+    private void resetGame() {
+        setMoleTimer.stop();
+        setPlantTimer.stop();
+
+        for (JButton tile : board) {
+            tile.setIcon(null);
+            tile.setEnabled(true);
+        }
+        currMoleTile = null;
+        currPlantTiles = new JButton[currPlantTiles.length];
+        score = 0;
+        gameOver = false;
+        updateScoreLabel();
+
+        setMoleTimer.start();
+        setPlantTimer.start();
     }
 }
